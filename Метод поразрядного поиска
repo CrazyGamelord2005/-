@@ -1,0 +1,87 @@
+package Study.OptimizationMethods;
+
+import java.util.Scanner;
+
+public class UniformSearch {
+
+    private static int functionCalls = 0; // Счетчик обращений к функции
+
+    public static double uniformSearch(double a, double b, double epsilon, int maxIterations) {
+        double h = (b - a) / 4; // Начальный шаг (делим на 4)
+        double x0 = a; // Начальная точка равна a
+        double x1 = x0 + h;
+        int iterations = 0;
+        functionCalls = 0; // Сбрасываем счетчик
+
+        System.out.println("Начальные параметры:");
+        System.out.println("Интервал: [" + a + ", " + b + "]");
+        System.out.println("Начальная точка (x0): " + x0);
+        System.out.println("Начальный шаг (h): " + h);
+        System.out.println("Точность (epsilon): " + epsilon);
+        System.out.println("Максимальное количество итераций: " + maxIterations);
+        System.out.println("----------------------------------------");
+
+        while (Math.abs(h) > epsilon && iterations < maxIterations) {
+            iterations++;
+
+            // Если x1 выходит за пределы интервала, корректируем его
+            if (x1 > b) {
+                x1 = b;
+            }
+
+            // Вывод текущих значений
+            System.out.println("Итерация " + iterations + ":");
+            System.out.println("x0 = " + x0 + ", f(x0) = " + func(x0));
+            System.out.println("x1 = " + x1 + ", f(x1) = " + func(x1));
+            System.out.println("Текущий шаг (h): " + h);
+            System.out.println("----------------------------------------");
+
+            // Если значение функции в x1 меньше, чем в x0, двигаемся вправо
+            if (func(x0) > func(x1)) {
+                x0 = x1;
+                x1 = x0 + h;
+            } else {
+                // Иначе уменьшаем шаг в 4 раза и двигаемся влево
+                h /= 4;
+                x1 = x0 - h;
+            }
+        }
+
+        System.out.println("Количество итераций: " + iterations);
+        System.out.println("Количество обращений к функции: " + functionCalls);
+        double minimumPoint = x0; // Найденная точка минимума
+        double minimumValue = func(minimumPoint); // Значение функции в точке минимума
+        System.out.println("Найденный минимум: x = " + minimumPoint + ", f(x) = " + minimumValue);
+        return minimumPoint;
+    }
+
+    // Функция, которую мы минимизируем: f(x) = (x^2 + 1) / x
+    public static double func(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return (x * x + 1) / x;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Ввод интервала [a, b]
+        System.out.print("Введите начало интервала (a): ");
+        double a = scanner.nextDouble();
+
+        System.out.print("Введите конец интервала (b): ");
+        double b = scanner.nextDouble();
+
+        // Ввод точности (epsilon)
+        System.out.print("Введите точность (epsilon): ");
+        double epsilon = scanner.nextDouble();
+
+        // Ввод количества итераций
+        System.out.print("Введите количество итераций: ");
+        int maxIterations = scanner.nextInt();
+
+        // Вызов метода равномерного поиска
+        double minimum = uniformSearch(a, b, epsilon, maxIterations);
+
+        scanner.close();
+    }
+}
