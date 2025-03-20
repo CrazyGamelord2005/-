@@ -1,0 +1,81 @@
+package Study.OptimizationMethods;
+
+import java.util.Scanner;
+
+public class MidpointMethod {
+
+    private static int functionCalls = 0; // Счетчик обращений к функции
+
+    public static double midpointMethod(double a, double b, double epsilon, int maxIterations) {
+        double xc;
+        int iterations = 0;
+        functionCalls = 0; // Сбрасываем счетчик
+
+        System.out.println("Начальные параметры:");
+        System.out.println("Интервал: [" + a + ", " + b + "]");
+        System.out.println("Точность (epsilon): " + epsilon);
+        System.out.println("Максимальное количество итераций: " + maxIterations);
+        System.out.println("----------------------------------------");
+
+        while ((b - a) > epsilon && iterations < maxIterations) {
+            iterations++;
+            xc = (a + b) / 2;
+
+            // Вывод текущих значений
+            System.out.println("Итерация " + iterations + ":");
+            System.out.println("Текущий интервал: [" + a + ", " + b + "]");
+            System.out.println("Середина интервала (xc): " + xc);
+            System.out.println("Производная в xc (f'(xc)): " + dfunc(xc));
+            System.out.println("----------------------------------------");
+
+            if (dfunc(xc) > 0) {
+                b = xc; // Обновляем правую границу
+            } else {
+                a = xc; // Обновляем левую границу
+            }
+        }
+
+        System.out.println("Количество итераций: " + iterations);
+        System.out.println("Количество обращений к функции: " + functionCalls);
+        double minimumPoint = (a + b) / 2; // Найденная точка минимума
+        double minimumValue = func(minimumPoint); // Значение функции в точке минимума
+        System.out.println("Найденный минимум: x = " + minimumPoint + ", f(x) = " + minimumValue);
+        return minimumPoint;
+    }
+
+    // Производная функции: f'(x) = (x^2 - 1) / x^2
+    public static double dfunc(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return (x * x - 1) / (x * x);
+    }
+
+    // Функция, которую мы минимизируем: f(x) = (x^2 + 1) / x
+    public static double func(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return (x * x + 1) / x;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Ввод интервала [a, b]
+        System.out.print("Введите начало интервала (a): ");
+        double a = scanner.nextDouble();
+
+        System.out.print("Введите конец интервала (b): ");
+        double b = scanner.nextDouble();
+
+        // Ввод точности (epsilon)
+        System.out.print("Введите точность (epsilon): ");
+        double epsilon = scanner.nextDouble();
+
+        // Ввод количества итераций
+        System.out.print("Введите количество итераций: ");
+        int maxIterations = scanner.nextInt();
+
+        // Вызов метода средней точки
+        double minimum = midpointMethod(a, b, epsilon, maxIterations);
+
+        scanner.close();
+    }
+}
