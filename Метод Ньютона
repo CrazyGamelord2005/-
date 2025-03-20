@@ -1,0 +1,87 @@
+package Study.OptimizationMethods;
+
+import java.util.Scanner;
+
+public class NewtonMethod {
+
+    private static int functionCalls = 0; // Счетчик обращений к функции
+
+    public static double newtonMethod(double x0, double epsilon, int maxIterations) {
+        double x = x0; // Начальное приближение
+        int iterations = 0;
+        functionCalls = 0; // Сбрасываем счетчик
+
+        System.out.println("Начальные параметры:");
+        System.out.println("Начальное приближение (x0): " + x0);
+        System.out.println("Точность (epsilon): " + epsilon);
+        System.out.println("Максимальное количество итераций: " + maxIterations);
+        System.out.println("----------------------------------------");
+
+        while (Math.abs(dfunc(x)) > epsilon && iterations < maxIterations) {
+            iterations++;
+
+            // Вычисляем новое приближение по формуле метода Ньютона
+            x = x - dfunc(x) / d2func(x); // x_{n+1} = x_n - f'(x_n) / f''(x_n).
+            // Это точка, где линейная аппроксимация функции f'(x) пересекает ось x.
+
+            // Вывод текущих значений
+            System.out.println("Итерация " + iterations + ":");
+            System.out.println("Текущее приближение (x): " + x);
+            System.out.println("Производная в x (f'(x)): " + dfunc(x));
+            System.out.println("Вторая производная в x (f''(x)): " + d2func(x));
+            System.out.println("----------------------------------------");
+
+            // Проверяем, что вторая производная положительна (минимум)
+            if (d2func(x) <= 0) {
+                System.out.println("Метод Ньютона сошёлся к локальному максимуму");
+                return Double.NaN; // Возвращаем NaN, если это не минимум
+            }
+        }
+
+        System.out.println("Количество итераций: " + iterations);
+        System.out.println("Количество обращений к функции: " + functionCalls);
+        double minimumPoint = x; // Найденная точка минимума
+        double minimumValue = func(minimumPoint); // Значение функции в точке минимума
+        System.out.println("Найденный минимум: x = " + minimumPoint + ", f(x) = " + minimumValue);
+        return minimumPoint;
+    }
+
+    // Производная функции: f'(x) = (x^2 - 1) / x^2
+    public static double dfunc(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return (x * x - 1) / (x * x);
+    }
+
+    // Вторая производная функции: f''(x) = 2 / x^3
+    public static double d2func(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return 2 / (x * x * x);
+    }
+
+    // Функция, которую мы минимизируем: f(x) = (x^2 + 1) / x
+    public static double func(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return (x * x + 1) / x;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Ввод начального приближения
+        System.out.print("Введите начальное приближение (x0): ");
+        double x0 = scanner.nextDouble();
+
+        // Ввод точности (epsilon)
+        System.out.print("Введите точность (epsilon): ");
+        double epsilon = scanner.nextDouble();
+
+        // Ввод количества итераций
+        System.out.print("Введите количество итераций: ");
+        int maxIterations = scanner.nextInt();
+
+        // Вызов метода Ньютона
+        double minimum = newtonMethod(x0, epsilon, maxIterations);
+
+        scanner.close();
+    }
+}
