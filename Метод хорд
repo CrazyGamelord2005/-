@@ -1,0 +1,104 @@
+package Study.OptimizationMethods;
+
+import java.util.Scanner;
+
+public class ChordMethod {
+
+    private static int functionCalls = 0; // Счетчик обращений к функции
+
+    public static double chordMethod(double a, double b, double epsilon, int maxIterations) {
+        double x = a; // Начальное значение x
+        int iterations = 0;
+        functionCalls = 0; // Сбрасываем счетчик
+
+        System.out.println("Начальные параметры:");
+        System.out.println("Интервал: [" + a + ", " + b + "]");
+        System.out.println("Точность (epsilon): " + epsilon);
+        System.out.println("Максимальное количество итераций: " + maxIterations);
+        System.out.println("----------------------------------------");
+
+        // Проверяем, что производные на концах интервала имеют разные знаки.
+        // Это необходимо для того, чтобы гарантировать, что внутри интервала есть корень уравнения f'(x) = 0.
+        if (dfunc(a) * dfunc(b) >= 0) {
+            System.out.println("Метод хорд не применим: производные на концах интервала должны иметь разные знаки.");
+            // Возвращаем точку с меньшим значением функции
+            if (func(a) < func(b)) {
+                System.out.println("Минимум на левой границе интервала: x = " + a + ", f(x) = " + func(a));
+                return a;
+            } else {
+                System.out.println("Минимум на правой границе интервала: x = " + b + ", f(x) = " + func(b));
+                return b;
+            }
+        }
+
+        while (Math.abs(b - a) > epsilon && iterations < maxIterations) {
+            iterations++;
+            // Вычисляем новую точку x по формуле метода хорд.
+            // Точка пересечения хорды с осью х (где f'(x) = 0) используется как новое приближение корня.
+            x = a - dfunc(a) * (b - a) / (dfunc(b) - dfunc(a));
+
+            // Вывод текущих значений
+            System.out.println("Итерация " + iterations + ":");
+            System.out.println("Текущий интервал: [" + a + ", " + b + "]");
+            System.out.println("Новая точка (x): " + x);
+            System.out.println("Производная в x (f'(x)): " + dfunc(x));
+            System.out.println("----------------------------------------");
+
+            // Если производная в x близка к нулю, завершаем поиск
+            if (Math.abs(dfunc(x)) < epsilon) {
+                break;
+            }
+
+            // Обновляем границы интервала
+            if (dfunc(x) > 0) {
+                b = x; // Это означает, что корень f'(x) = 0 находится в левой части интервала [a, x].
+                // Поэтому обновляем правую границу
+            } else {
+                a = x; // Обновляем левую границу
+            }
+        }
+
+        System.out.println("Количество итераций: " + iterations);
+        System.out.println("Количество обращений к функции: " + functionCalls);
+        double minimumPoint = x; // Найденная точка минимума
+        double minimumValue = func(minimumPoint); // Значение функции в точке минимума
+        System.out.println("Найденный минимум: x = " + minimumPoint + ", f(x) = " + minimumValue);
+        return minimumPoint;
+    }
+
+    // Производная функции: f'(x) = (x^2 - 1) / x^2
+    public static double dfunc(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return (x * x - 1) / (x * x);
+    }
+
+    // Функция, которую мы минимизируем: f(x) = (x^2 + 1) / x
+    public static double func(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return (x * x + 1) / x;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Ввод интервала [a, b]
+        System.out.print("Введите начало интервала (a): ");
+        double a = scanner.nextDouble();
+
+        System.out.print("Введите конец интервала (b): ");
+        double b = scanner.nextDouble();
+
+        // Ввод точности (epsilon)
+        System.out.print("Введите точность (epsilon): ");
+        double epsilon = scanner.nextDouble();
+
+        // Ввод количества итераций
+        System.out.print("Введите количество итераций: ");
+        int maxIterations = scanner.nextInt();
+
+        // Вызов метода хорд
+        double minimum = chordMethod(a, b, epsilon, maxIterations);
+
+        scanner.close();
+    }
+}
