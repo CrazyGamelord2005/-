@@ -1,0 +1,86 @@
+package Study.OptimizationMethods;
+
+import java.util.Scanner;
+
+public class GoldenSectionSearch {
+
+    private static final double PHI = (Math.sqrt(5) - 1) / 2; // примерно 0.618
+    private static int functionCalls = 0; // Счетчик обращений к функции
+
+    public static double goldenSectionSearch(double a, double b, double epsilon, int maxIterations) {
+        double x1 = a + (1 - PHI) * (b - a);
+        double x2 = a + PHI * (b - a);
+        double f1 = func(x1);
+        double f2 = func(x2);
+        int iterations = 0;
+        functionCalls = 0; // Сбрасываем счетчик
+
+        System.out.println("Начальные параметры:");
+        System.out.println("Интервал: [" + a + ", " + b + "]");
+        System.out.println("Точность (epsilon): " + epsilon);
+        System.out.println("Максимальное количество итераций: " + maxIterations);
+        System.out.println("----------------------------------------");
+
+        while ((b - a) > epsilon && iterations < maxIterations) {
+            iterations++;
+
+            // Вывод текущих значений
+            System.out.println("Итерация " + iterations + ":");
+            System.out.println("x1 = " + x1 + ", f(x1) = " + f1);
+            System.out.println("x2 = " + x2 + ", f(x2) = " + f2);
+            System.out.println("Текущий интервал: [" + a + ", " + b + "]");
+            System.out.println("----------------------------------------");
+
+            if (f1 < f2) {
+                b = x2;
+                x2 = x1;
+                f2 = f1;
+                x1 = a + (1 - PHI) * (b - a);
+                f1 = func(x1);
+            } else {
+                a = x1;
+                x1 = x2;
+                f1 = f2;
+                x2 = a + PHI * (b - a);
+                f2 = func(x2);
+            }
+        }
+
+        System.out.println("Количество итераций: " + iterations);
+        System.out.println("Количество обращений к функции: " + functionCalls);
+        double minimumPoint = (a + b) / 2; // Найденная точка минимума
+        double minimumValue = func(minimumPoint); // Значение функции в точке минимума
+        System.out.println("Найденный минимум: x = " + minimumPoint + ", f(x) = " + minimumValue);
+        return minimumPoint;
+    }
+
+    // Функция, которую мы минимизируем
+    public static double func(double x) {
+        functionCalls++; // Увеличиваем счетчик обращений
+        return (x * x + 1) / x;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Ввод интервала [a, b]
+        System.out.print("Введите начало интервала (a): ");
+        double a = scanner.nextDouble();
+
+        System.out.print("Введите конец интервала (b): ");
+        double b = scanner.nextDouble();
+
+        // Ввод точности (epsilon)
+        System.out.print("Введите точность (epsilon): ");
+        double epsilon = scanner.nextDouble();
+
+        // Ввод количества итераций
+        System.out.print("Введите количество итераций: ");
+        int maxIterations = scanner.nextInt();
+
+        // Вызов метода золотого сечения
+        double minimum = goldenSectionSearch(a, b, epsilon, maxIterations);
+
+        scanner.close();
+    }
+}
