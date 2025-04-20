@@ -1,0 +1,167 @@
+package Study.OptimizationMethods;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
+public class HookeJeeves {
+    // Параметры алгоритма
+    private static final double EPSILON = 1e-3;  // Точность поиска
+    private static final int GRID_SIZE = 15;     // Размер сетки для визуализации (уменьшен для компактности)
+    private static List<double[]> trajectory = new ArrayList<>();  // Список для хранения точек траектории
+
+    public static void main(String[] args) {
+        // Определяем целевую функцию
+        Function<double[], Double> f = x -> 20 * Math.pow(x[0] - 4, 4) + 300 * Math.pow(x[1] - 5, 2);
+
+        // Набор начальных точек для тестирования
+        double[][] initialPoints = {
+                {0, 0},    // Далеко от минимума
+                {4, 0},     // x1 совпадает с минимумом, x2 нет
+                {0, 5},     // x2 совпадает с минимумом, x1 нет
+                {3, 4}      // Близко к минимуму
+        };
+
+        // Запуск оптимизации для каждой начальной точки
+        for (double[] point : initialPoints) {
+            trajectory.clear();  // Очищаем предыдущую траекторию
+            System.out.println("\n══════════════════════════════════════");
+            System.out.println("Начальная точка: (" + point[0] + ", " + point[1] + ")");
+            optimize(f, point);  // Запуск оптимизации
+            printTrajectory();   // Визуализация траектории
+            System.out.println("══════════════════════════════════════");
+        }
+    }
+
+    // Основной метод оптимизации
+    private static void optimize(Function<double[], Double> f, double[] initialPoint) {
+        double[] x = initialPoint.clone();  // Текущая точка
+        trajectory.add(x.clone());          // Сохраняем начальную точку
+        double[] delta = {0.5, 0.5};       // Начальный шаг поиска
+        double alpha = 2.0;                 // Коэффициент ускорения
+        int iterations = 0;                 // Счетчик итераций
+
+        // Главный цикл оптимизации
+        while (true) {
+            double[] xNew = exploratorySearch(f, x, delta);  // Исследующий поиск
+
+            // Если улучшения нет
+            if (f.apply(xNew) >= f.apply(x)) {
+                // Уменьшаем шаг поиска
+                for (int i = 0; i < delta.length; i++) {
+                    delta[i] *= 0.5;
+                }
+                // Проверяем условие остановки
+                if (delta[0] < EPSILON && delta[1] < EPSILON) {
+                    break;
+                }
+            }
+            // Если улучшение есть
+            else {
+                // Вычисляем направление движения
+                double[] direction = new double[x.length];
+                for (int i = 0; i < x.length; i++) {
+                    direction[i] = xNew[i] - x[i];
+                }
+
+                // Пробуем ускоренный шаг
+                double[] xAccelerated = new double[x.length];
+                for (int i = 0; i < x.length; i++) {
+                    xAccelerated[i] = xNew[i] + alpha * direction[i];
+                }
+
+                // Выбираем лучшую точку
+                if (f.apply(xAccelerated) < f.apply(xNew)) {
+                    x = xAccelerated;
+                } else {
+                    x = xNew;
+                }
+                trajectory.add(x.clone());  // Сохраняем новую точку
+            }
+            iterations++;
+        }
+
+        // Вывод результатов
+        System.out.println("\nРезультаты оптимизации:");
+        System.out.printf("Точка минимума: (%.4f, %.4f)%n", x[0], x[1]);
+        System.out.printf("Значение функции: %.4f%n", f.apply(x));
+        System.out.println("Итераций: " + iterations);
+    }
+
+    // Метод исследующего поиска
+    private static double[] exploratorySearch(Function<double[], Double> f, double[] x, double[] delta) {
+        double[] xNew = x.clone();  // Начинаем с текущей точки
+
+        // Перебираем все координаты
+        for (int i = 0; i < x.length; i++) {
+            double originalValue = xNew[i];
+
+            // Пробуем шаг в положительном направлении
+            xNew[i] = originalValue + delta[i];
+            double valuePlus = f.apply(xNew);
+
+            // Пробуем шаг в отрицательном направлении
+            xNew[i] = originalValue - delta[i];
+            double valueMinus = f.apply(xNew);
+
+            // Выбираем наилучшее направление
+            if (valuePlus < f.apply(xNew)) {
+                xNew[i] = originalValue + delta[i];
+            } else if (valueMinus < f.apply(xNew)) {
+                xNew[i] = originalValue - delta[i];
+            } else {
+                xNew[i] = originalValue;  // Оставляем как есть
+            }
+        }
+        return xNew;
+    }
+
+    // Метод для визуализации траектории
+    private static void printTrajectory() {
+        System.out.println("\nВизуализация траектории:");
+        char[][] grid = new char[GRID_SIZE][GRID_SIZE];
+
+        // Инициализация сетки (заполняем пробелами)
+        for (int i = 0; i < GRID_SIZE; i++) {
+            for (int j = 0; j < GRID_SIZE; j++) {
+                grid[i][j] = '·';  // Используем точки для фона
+            }
+        }
+
+        // Диапазон отображения (подбирается под конкретную функцию)
+        double minX = 0, maxX = 6, minY = 0, maxY = 6;
+
+        // Рисуем траекторию
+        for (double[] point : trajectory) {
+            int x = (int) ((point[0] - minX) / (maxX - minX) * (GRID_SIZE - 1));
+            int y = (int) ((point[1] - minY) / (maxY - minY) * (GRID_SIZE - 1));
+            x = Math.min(Math.max(x, 0), GRID_SIZE - 1);
+            y = Math.min(Math.max(y, 0), GRID_SIZE - 1);
+            grid[y][x] = '●';  // Используем символ круга для траектории
+        }
+
+        // Отмечаем точку минимума (4,5)
+        int minXPos = (int) ((4 - minX) / (maxX - minX) * (GRID_SIZE - 1));
+        int minYPos = (int) ((5 - minY) / (maxY - minY) * (GRID_SIZE - 1));
+        grid[minYPos][minXPos] = '★';  // Звезда для минимума
+
+        // Выводим сетку с рамками
+        System.out.print("┌");
+        for (int j = 0; j < GRID_SIZE; j++) System.out.print("──");
+        System.out.println("┐");
+
+        for (int i = 0; i < GRID_SIZE; i++) {
+            System.out.print("│");
+            for (int j = 0; j < GRID_SIZE; j++) {
+                System.out.print(grid[i][j] + " ");
+            }
+            System.out.println("│");
+        }
+
+        System.out.print("└");
+        for (int j = 0; j < GRID_SIZE; j++) System.out.print("──");
+        System.out.println("┘");
+
+        System.out.println("● - траектория  ★ - минимум");
+    }
+}
