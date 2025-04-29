@@ -1,0 +1,150 @@
+package Study.OptimizationMethods;
+
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class GradientDescent extends Application {
+
+    // Для хранения точек траектории
+    private static List<double[]> trajectory = new ArrayList<>();
+
+    // Целевая функция
+    private static double function(double x1, double x2) {
+        return 20 * Math.pow(x1 - 4, 4) + 300 * Math.pow(x2 - 5, 2);
+    }
+
+    // Градиент функции
+    private static double[] gradient(double x1, double x2) {
+        return new double[] {
+                80 * Math.pow(x1 - 4, 3),  // ∂f/∂x1
+                600 * (x2 - 5)             // ∂f/∂x2
+        };
+    }
+
+    // Норма (длина) вектора
+    private static double norm(double[] vector) {
+        return Math.sqrt(vector[0]*vector[0] + vector[1]*vector[1]);
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        // Параметры метода
+        double alpha = 0.001;    // Начальный шаг
+        double epsilon = 1e-3;    // Критерий остановки
+
+        // Начальная точка
+        double x1 = 0.0;
+        double x2 = 0.0;
+        double currentValue = function(x1, x2);
+
+        // Добавляем начальную точку в траекторию
+        trajectory.add(new double[]{x1, x2});
+
+        System.out.println("Начальная точка: (" + x1 + ", " + x2 + ")");
+        System.out.println("Начальное значение функции: " + currentValue);
+        System.out.println("----------------------------------------");
+
+        int iteration = 0;
+        double[] grad;
+        double gradNorm;
+
+        // Основной цикл метода
+        do {
+            grad = gradient(x1, x2);
+            gradNorm = norm(grad);
+
+            // Проверка условия остановки
+            if (gradNorm < epsilon) {
+                break;
+            }
+
+            // Пробный шаг
+            double newX1 = x1 - alpha * grad[0];
+            double newX2 = x2 - alpha * grad[1];
+            double newValue = function(newX1, newX2);
+
+            // Шаг 3: Проверка улучшения
+            if (newValue < currentValue) {
+                // Принимаем шаг
+                x1 = newX1;
+                x2 = newX2;
+                currentValue = newValue;
+                iteration++;
+
+                // Добавляем точку в траекторию
+                trajectory.add(new double[]{x1, x2});
+
+                System.out.printf("Итерация %d: шаг=%.6f, точка=(%.6f, %.6f), f(x)=%.6f%n",
+                        iteration, alpha, x1, x2, currentValue);
+            }
+            else {
+                // Шаг 4: Дробление шага
+                alpha /= 2;
+                System.out.printf("Уменьшение шага: alpha=%.6f%n", alpha);
+            }
+
+        } while (true);
+
+        // Вывод результатов
+        System.out.println("\nМетод градиентного спуска завершен:");
+        System.out.println("----------------------------------------");
+        System.out.println("Всего итераций: " + iteration);
+        System.out.printf("Точка минимума: (%.8f, %.8f)%n", x1, x2);
+        System.out.printf("Значение функции: %.12f%n", currentValue);
+        System.out.printf("Градиент: (%.10f, %.10f)%n", grad[0], grad[1]);
+        System.out.printf("Норма градиента: %.10f%n", gradNorm);
+
+        // Создание графика
+        createChart(primaryStage);
+    }
+
+    private void createChart(Stage primaryStage) {
+        // Создаем оси
+        final NumberAxis xAxis = new NumberAxis(0, 6, 1);
+        final NumberAxis yAxis = new NumberAxis(0, 6, 1);
+        xAxis.setLabel("x1");
+        yAxis.setLabel("x2");
+
+        // Создаем график
+        final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
+        lineChart.setTitle("Траектория градиентного спуска");
+
+        // Создаем серию данных
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
+        series.setName("Траектория оптимизации");
+
+        // Добавляем точки траектории
+        for (double[] point : trajectory) {
+            series.getData().add(new XYChart.Data<>(point[0], point[1]));
+        }
+
+        // Добавляем маркер для начальной точки
+        XYChart.Series<Number, Number> startSeries = new XYChart.Series<>();
+        startSeries.setName("Начальная точка");
+        startSeries.getData().add(new XYChart.Data<>(trajectory.get(0)[0], trajectory.get(0)[1]));
+
+        // Добавляем маркер для конечной точки
+        XYChart.Series<Number, Number> endSeries = new XYChart.Series<>();
+        endSeries.setName("Точка минимума");
+        endSeries.getData().add(new XYChart.Data<>(
+                trajectory.get(trajectory.size()-1)[0],
+                trajectory.get(trajectory.size()-1)[1]));
+
+        // Настраиваем сцену
+        lineChart.getData().addAll(series, startSeries, endSeries);
+        Scene scene = new Scene(lineChart, 800, 600);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+}
