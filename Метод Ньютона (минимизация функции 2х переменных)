@@ -1,0 +1,94 @@
+package Study.OptimizationMethods;
+
+public class PureNewtonMethod {
+
+    // Целевая функция
+    public static double function(double x1, double x2) {
+        return 20 * Math.pow(x1 - 4, 4) + 300 * Math.pow(x2 - 5, 2);
+    }
+
+    // Градиент функции
+    public static double[] gradient(double x1, double x2) {
+        double dfdx1 = 80 * Math.pow(x1 - 4, 3);
+        double dfdx2 = 600 * (x2 - 5);
+        return new double[]{dfdx1, dfdx2};
+    }
+
+    // Матрица Гессе
+    public static double[][] hessian(double x1, double x2) {
+        double d2fdx1 = 240 * Math.pow(x1 - 4, 2);
+        double d2fdx2 = 600;
+        return new double[][]{{d2fdx1, 0}, {0, d2fdx2}};
+    }
+
+    // Метод для обращения матрицы
+    public static double[][] invertMatrix(double[][] matrix) {
+        double a = matrix[0][0], b = matrix[0][1];
+        double c = matrix[1][0], d = matrix[1][1];
+
+        double det = a * d - b * c;
+        if (Math.abs(det) < 1e-10) {
+            throw new ArithmeticException("Матрица вырождена");
+        }
+
+        return new double[][]{
+                {d/det, -b/det},
+                {-c/det, a/det}
+        };
+    }
+
+    // Умножение матрицы на вектор
+    public static double[] matrixVectorMultiply(double[][] matrix, double[] vector) {
+        return new double[]{
+                matrix[0][0]*vector[0] + matrix[0][1]*vector[1],
+                matrix[1][0]*vector[0] + matrix[1][1]*vector[1]
+        };
+    }
+
+    public static void main(String[] args) {
+        // Параметры метода
+        double x1 = 0.0, x2 = 0.0; // Начальная точка
+        double eps = 1e-3;          // Критерий остановки
+        int maxIter = 100;          // Максимальное число итераций
+
+        System.out.printf("Начальная точка: (%.4f, %.4f)\n", x1, x2);
+        System.out.printf("f(x0) = %.4f\n", function(x1, x2));
+
+        for (int k = 0; k < maxIter; k++) {
+            // Вычисляем градиент
+            double[] grad = gradient(x1, x2);
+            double gradNorm = Math.sqrt(grad[0]*grad[0] + grad[1]*grad[1]);
+
+            // Проверяем критерий остановки
+            if (gradNorm < eps) {
+                System.out.printf("\nМинимум найден на итерации %d:\n", k);
+                System.out.printf("x* = (%.4f, %.4f)\n", x1, x2);
+                System.out.printf("f(x*) = %.4f\n", function(x1, x2));
+                break;
+            }
+
+            // Вычисляем матрицу Гессе
+            double[][] hess = hessian(x1, x2);
+
+            try {
+                // Обращаем матрицу Гессе
+                double[][] invHess = invertMatrix(hess);
+
+                // Вычисляем направление Ньютона
+                double[] direction = matrixVectorMultiply(invHess, grad);
+                x1 -= direction[0];
+                x2 -= direction[1];
+
+            } catch (ArithmeticException e) {
+                System.out.println("Матрица Гессе вырождена. Прекращение работы.");
+                break;
+            }
+
+            // Выводим информацию о текущей итерации
+            System.out.printf("\nИтерация %d:\n", k+1);
+            System.out.printf("x = (%.4f, %.4f)\n", x1, x2);
+            System.out.printf("f(x) = %.4f\n", function(x1, x2));
+            System.out.printf("∇f = %.4f\n", gradNorm);
+        }
+    }
+}
